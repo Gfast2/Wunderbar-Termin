@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require("express");
-const { Sequelize, DataTypes } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const app = express();
 const port = 3000;
 
@@ -35,8 +35,17 @@ const Booking = sequelize.define('appointment',
 })
 
 app.get('/bookings', async(req, res) => {
-  const bookings = await Booking.findAll();
-  console.log(bookings);
+  const filter = req.query; // TODO: could be string or string[], extend the logic here
+  let bookings;
+  if(filter.name === undefined) {
+    bookings = await Booking.findAll();
+  } else {
+    bookings = await Booking.findOne({where: {
+      name: {
+        [Op.like]: `%${filter.name}%`
+      }
+    }})
+  }
 
   res.json({bookings:bookings})
 })
