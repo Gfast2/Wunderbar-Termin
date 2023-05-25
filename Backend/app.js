@@ -1,20 +1,45 @@
+require('dotenv').config();
 const express = require("express");
-const mongoose = require("mongoose");
+const { Sequelize, DataTypes } = require("sequelize");
 const app = express();
 const port = 3000;
 
-// 连接 MongoDB 数据库
-mongoose.connect("mongodb://localhost/my_database", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const sequelize = new Sequelize(`mysql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${
+  process.env.DB_HOST
+}:${process.env.DB_PORT || 3306}/${process.env.DB_SCHEMA}`)
 
 // 定义数据类型
-const Booking = mongoose.model("Booking", {
-  date: String,
-  name: String,
-  email: String,
-});
+const Booking = sequelize.define('appointment',
+  {
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: Sequelize.INTEGER,
+    },
+    name: {
+        allowNull: false,
+        type: Sequelize.STRING(128),
+    },
+    email: {
+        allowNull: false,
+        type: Sequelize.STRING(128),
+    },
+    date: {
+        allowNull: false,
+        type: Sequelize.DATEONLY,
+    }
+  }, {
+  freezeTableName: true,
+  timestamps: false
+})
+
+app.get('/bookings', async(req, res) => {
+  const bookings = await Booking.findAll();
+  console.log(bookings);
+
+  res.json({bookings:bookings})
+})
 
 // 处理 POST / bookings 路由
 app.post("/bookings", async (req, res) => {
@@ -38,7 +63,7 @@ app.listen(port, () => {
   console.log(`*** Express应用程序正在监听端口${port}... ***`);
 });
 
-/* 
+/*
 这段代码定义了一个路由，它监听根路径("/")的GET请求
-监听 3000 端口 
+监听 3000 端口
 */
